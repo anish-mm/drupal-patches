@@ -1,0 +1,21 @@
+diff --git a/src/Controller/Search404Controller.php b/src/Controller/Search404Controller.php
+index 375ba12..d383e4b 100644
+--- a/src/Controller/Search404Controller.php
++++ b/src/Controller/Search404Controller.php
+@@ -294,6 +294,7 @@ class Search404Controller extends ControllerBase {
+     // use keys from the path that resulted in the 404.
+     if (empty($keys)) {
+       $path = \Drupal::service('path.current')->getPath();
++      $path = urldecode($path);
+       $path = preg_replace('/[_+-.,!@#$^&*();\'"?=]|[|]|[{}]|[<>]/', '/', $path);
+       $paths = explode('/', $path);
+       // Removing the custom search path value from the keyword search.
+@@ -308,7 +309,7 @@ class Search404Controller extends ControllerBase {
+         $keys = array_filter($paths);
+       }
+       // Split the keys with - and space.
+-      $keys = preg_replace('/-|%20/', ' ', $keys);
++      $keys = preg_replace('/-/', ' ', $keys);
+       foreach ($keys as $key => $value) {
+         $keys_with_space_hypen[$key] = explode(' ', $value);
+         $keys_with_space_hypen[$key] = array_filter($keys_with_space_hypen[$key]);
