@@ -1,0 +1,26 @@
+From 5f2d54387d9d2f417facb2a9b448527b95d5fdca Mon Sep 17 00:00:00 2001
+From: Anish M M <anishmathewdev@gmail.com>
+Date: Fri, 9 Jun 2017 19:22:04 +0530
+Subject: [PATCH] Issue #2884936 by anish_mathew: Notice on accessing Undefined
+ index: HTTP_REFERER
+
+---
+ src/Controller/Search404Controller.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/Controller/Search404Controller.php b/src/Controller/Search404Controller.php
+index 375ba12..a76e566 100644
+--- a/src/Controller/Search404Controller.php
++++ b/src/Controller/Search404Controller.php
+@@ -260,7 +260,7 @@ class Search404Controller extends ControllerBase {
+       'lycos' => 'query',
+       'yahoo' => 'p',
+     );
+-    $parsed_url = parse_url($_SERVER['HTTP_REFERER']);
++    $parsed_url = !empty($_SERVER['HTTP_REFERER']) ? parse_url($_SERVER['HTTP_REFERER']) : FALSE;
+     $remote_host = !empty($parsed_url['host']) ? $parsed_url['host'] : '';
+     $query_string = !empty($parsed_url['query']) ? $parsed_url['query'] : '';
+     parse_str($query_string, $query);
+-- 
+2.11.0
+

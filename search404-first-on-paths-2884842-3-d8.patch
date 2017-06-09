@@ -1,0 +1,84 @@
+diff --git a/config/install/search404.settings.yml b/config/install/search404.settings.yml
+index e030692..f7b099c 100644
+--- a/config/install/search404.settings.yml
++++ b/config/install/search404.settings.yml
+@@ -9,6 +9,7 @@ search404_use_search_engine: false
+ search404_ignore_extensions: 'htm html php'
+ search404_ignore_query: 'gif jpg jpeg bmp png'
+ search404_first: false
++search404_first_on_paths: ''
+ search404_regex: ''
+ search404_page_text: ''
+ search404_do_google_cse: false
+diff --git a/config/schema/search404.schema.yml b/config/schema/search404.schema.yml
+index 1202b6f..6659a7d 100644
+--- a/config/schema/search404.schema.yml
++++ b/config/schema/search404.schema.yml
+@@ -24,6 +24,8 @@ search404.settings:
+       type: string
+     search404_first:
+       type: boolean
++    search404_first_on_paths:
++      type: string
+     search404_regex:
+       type: string
+     search404_page_text:
+diff --git a/src/Controller/Search404Controller.php b/src/Controller/Search404Controller.php
+index 375ba12..8fd6e81 100644
+--- a/src/Controller/Search404Controller.php
++++ b/src/Controller/Search404Controller.php
+@@ -122,14 +122,26 @@ class Search404Controller extends ControllerBase {
+           }
+ 
+           if (isset($results)) {
++            // Check if there are any specific paths are set where only we need to
++            // jump to the first result.
++            $paths = \Drupal::config('search404.settings')->get('search404_first_on_paths');
++            $path_match = TRUE;
++
++            // Check if the current path exists in the set paths list.
++            if (!empty($paths)) {
++              $path = str_replace(' ', '/', $keys);
++              $path_match = \Drupal::service('path.matcher')->matchPath($path, $paths);
++            }
++
+             // Jump to first result if there are results and
+             // if there is only one result and if jump to first is selected or
+             // if there are more than one results and force jump
+             // to first is selected.
+             if (is_array($results) &&
+-                (
+-                (count($results) == 1 && \Drupal::config('search404.settings')->get('search404_jump')) || (count($results) >= 1 && \Drupal::config('search404.settings')->get('search404_first'))
+-                )
++              (
++                (count($results) == 1 && \Drupal::config('search404.settings')->get('search404_jump'))
++                || (count($results) >= 1 && \Drupal::config('search404.settings')->get('search404_first') && $path_match)
++              )
+             ) {
+               $this->search404CustomErrorMessage($keys);
+               if (isset($results[0]['#result']['link'])) {
+diff --git a/src/Form/Search404Settings.php b/src/Form/Search404Settings.php
+index b451d03..61a4055 100644
+--- a/src/Form/Search404Settings.php
++++ b/src/Form/Search404Settings.php
+@@ -39,6 +39,12 @@ class Search404Settings extends ConfigFormBase {
+       '#description' => $this->t('Works only with Core, Apache Solr, Lucene and Xapian searches. An HTTP status of 301 or 302 will be returned for this redirect.'),
+       '#default_value' => \Drupal::config('search404.settings')->get('search404_first'),
+     );
++    $form['search404_first_on_paths'] = array(
++      '#type' => 'textarea',
++      '#title' => $this->t('Jump directly to the first search result only on the listed paths.'),
++      '#description' => $this->t('Enter one path per line. The "*" character is a wildcard. Example paths are blog for the blog page and blog/* for every personal blog.'),
++      '#default_value' => \Drupal::config('search404.settings')->get('search404_first_on_paths'),
++    );
+     $form['search404_do_google_cse'] = array(
+       '#type' => 'checkbox',
+       '#title' => $this->t('Do a Google CSE Search instead of a Drupal Search when a 404 occurs'),
+@@ -227,6 +233,7 @@ class Search404Settings extends ConfigFormBase {
+       ->set('search404_do_search_by_page', $form_state->getValue('search404_do_search_by_page'))
+       ->set('search404_first', $form_state->getValue('search404_first'))
+       ->set('search404_jump', $form_state->getValue('search404_jump'))
++      ->set('search404_first_on_paths', $form_state->getValue('search404_first_on_paths'))
+       ->set('search404_use_or', $form_state->getValue('search404_use_or'))
+       ->set('search404_ignore', $form_state->getValue('search404_ignore'))
+       ->set('search404_ignore_paths', $form_state->getValue('search404_ignore_paths'))
