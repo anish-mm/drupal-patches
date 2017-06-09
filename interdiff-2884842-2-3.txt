@@ -1,0 +1,23 @@
+diff --git a/src/Controller/Search404Controller.php b/src/Controller/Search404Controller.php
+index 924bcdc..8fd6e81 100644
+--- a/src/Controller/Search404Controller.php
++++ b/src/Controller/Search404Controller.php
+@@ -125,7 +125,7 @@ class Search404Controller extends ControllerBase {
+             // Check if there are any specific paths are set where only we need to
+             // jump to the first result.
+             $paths = \Drupal::config('search404.settings')->get('search404_first_on_paths');
+-            $path_match = FALSE;
++            $path_match = TRUE;
+ 
+             // Check if the current path exists in the set paths list.
+             if (!empty($paths)) {
+@@ -140,8 +140,7 @@ class Search404Controller extends ControllerBase {
+             if (is_array($results) &&
+               (
+                 (count($results) == 1 && \Drupal::config('search404.settings')->get('search404_jump'))
+-                || (count($results) >= 1 && \Drupal::config('search404.settings')->get('search404_first'))
+-                || (count($results) >= 1 && $path_match)
++                || (count($results) >= 1 && \Drupal::config('search404.settings')->get('search404_first') && $path_match)
+               )
+             ) {
+               $this->search404CustomErrorMessage($keys);
